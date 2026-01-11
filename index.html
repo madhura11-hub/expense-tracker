@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Monthly Expense Tracker</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: "Poppins", Arial, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: url("images/background.png") no-repeat center/cover;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .app {
+      width: 900px;
+      padding: 20px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(12px);
+    }
+
+    /* HERO */
+    .hero {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .hero img {
+      width: 220px;
+    }
+
+    /* INPUTS */
+    select, input, button {
+      padding: 10px;
+      border-radius: 10px;
+      border: none;
+      outline: none;
+    }
+
+    .form {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      margin: 15px 0;
+    }
+
+    button {
+      cursor: pointer;
+      background: #4f46e5;
+      color: white;
+      font-weight: bold;
+    }
+
+    button:hover {
+      transform: scale(1.05);
+    }
+
+    /* CARDS */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      margin: 20px 0;
+    }
+
+    .card {
+      padding: 15px;
+      border-radius: 15px;
+      text-align: center;
+      background: white;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+
+    .income { border-left: 5px solid #16a34a; }
+    .expense { border-left: 5px solid #dc2626; }
+    .balance { border-left: 5px solid #2563eb; }
+
+    /* LIST */
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    li {
+      padding: 10px;
+      background: #f4f4f5;
+      margin-bottom: 8px;
+      border-radius: 10px;
+    }
+
+    /* EMPTY */
+    .empty {
+      text-align: center;
+      display: none;
+      margin-top: 20px;
+    }
+
+    .empty img {
+      width: 200px;
+      opacity: 0.8;
+    }
+  </style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div>
+      <h1>Monthly Expense Tracker</h1>
+      <p>Track • Analyze • Improve</p>
+    </div>
+    <img src="images/dashboard.png">
+  </div>
+
+  <!-- MONTH -->
+  <select id="month">
+    <option value="">Select Month</option>
+    <option>January</option><option>February</option><option>March</option>
+    <option>April</option><option>May</option><option>June</option>
+    <option>July</option><option>August</option><option>September</option>
+    <option>October</option><option>November</option><option>December</option>
+  </select>
+
+  <!-- FORM -->
+  <div class="form">
+    <input id="title" placeholder="Title">
+    <input id="amount" type="number" placeholder="Amount">
+    <select id="type">
+      <option value="income">Income</option>
+      <option value="expense">Expense</option>
+    </select>
+    <button id="add">Add</button>
+    <button id="reset">Reset</button>
+  </div>
+
+  <!-- CARDS -->
+  <div class="cards">
+    <div class="card income">Income<br>₹<span id="income">0</span></div>
+    <div class="card expense">Expense<br>₹<span id="expense">0</span></div>
+    <div class="card balance">Balance<br>₹<span id="balance">0</span></div>
+  </div>
+
+  <!-- EMPTY -->
+  <div class="empty" id="empty">
+    <img src="images/empty.png">
+    <p>No data for this month</p>
+  </div>
+
+  <!-- LIST -->
+  <ul id="list"></ul>
+
+</div>
+
+<script>
+  const monthEl = document.getElementById("month");
+  const titleEl = document.getElementById("title");
+  const amountEl = document.getElementById("amount");
+  const typeEl = document.getElementById("type");
+  const addBtn = document.getElementById("add");
+  const resetBtn = document.getElementById("reset");
+
+  const incomeEl = document.getElementById("income");
+  const expenseEl = document.getElementById("expense");
+  const balanceEl = document.getElementById("balance");
+  const list = document.getElementById("list");
+  const empty = document.getElementById("empty");
+
+  let data = {};
+
+  addBtn.onclick = () => {
+    const month = monthEl.value;
+    const title = titleEl.value.trim();
+    const amount = Number(amountEl.value);
+    const type = typeEl.value;
+
+    if (!month || !title || amount <= 0) return alert("Invalid input");
+
+    data[month] = data[month] || [];
+    data[month].push({ title, amount, type });
+
+    titleEl.value = "";
+    amountEl.value = "";
+
+    render(month);
+  };
+
+  monthEl.onchange = () => render(monthEl.value);
+
+  function render(month) {
+    list.innerHTML = "";
+    let income = 0, expense = 0;
+
+    if (!data[month]) {
+      update(0,0);
+      empty.style.display = "block";
+      return;
+    }
+
+    empty.style.display = "none";
+
+    data[month].forEach(item => {
+      if (item.type === "income") income += item.amount;
+      else expense += item.amount;
+
+      const li = document.createElement("li");
+      li.textContent = `${item.title} - ₹${item.amount}`;
+      list.appendChild(li);
+    });
+
+    update(income, expense);
+  }
+
+  function update(i, e) {
+    incomeEl.textContent = i;
+    expenseEl.textContent = e;
+    balanceEl.textContent = i - e;
+  }
+
+  resetBtn.onclick = () => {
+    const month = monthEl.value;
+    if (!month) return;
+    delete data[month];
+    render(month);
+  };
+</script>
+
+</body>
+</html>
